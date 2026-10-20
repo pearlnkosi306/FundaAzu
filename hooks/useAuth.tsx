@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { configurationError, isConfigured, supabase } from "../lib/supabase";
@@ -46,7 +46,10 @@ function defaultProfile(id: string, firstName = "", surname = ""): Profile {
   };
 }
 
-function errorMessage(error: { message: string }): string {
+function errorMessage(error: { message: string; code?: string }): string {
+  if (error.code === "PGRST205" || error.code === "42P01") {
+    return "Supabase is connected, but the profiles table is missing. Run supabase/migrations/20261020000000_init.sql in your Supabase SQL Editor, then retry.";
+  }
   return error.message || "Something went wrong. Please try again.";
 }
 
@@ -55,8 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authGeneration = useRef(0);
 
   const loadProfile = useCallback(async (currentSession: Session | null) => {
+    const generation = ++authGeneration.current;
     setSession(currentSession);
     setError(null);
     if (!currentSession) {
@@ -66,41 +71,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setLoading(true);
-    const { data, error: readError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentSession.user.id)
-      .maybeSingle();
-    if (readError) {
-      setProfile(null);
-      setError(errorMessage(readError));
-      setLoading(false);
-      return;
-    }
-    if (data) {
-      setProfile(data as Profile);
-      setLoading(false);
-      return;
-    }
+    try {
+      const { data, error: readError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", currentSession.user.id)
+        .maybeSingle();
+      if (generation !== authGeneration.current) return;
+      if (readError) {
+        setProfile(null);
+        setError(errorMessage(readError));
+        setLoading(false);
+        return;
+      }
+      if (data) {
+        setProfile(data as Profile);
+        setLoading(false);
+        return;
+      }
 
-    const metadata = currentSession.user.user_metadata;
-    const initial = defaultProfile(
-      currentSession.user.id,
-      typeof metadata.first_name === "string" ? metadata.first_name : "",
-      typeof metadata.surname === "string" ? metadata.surname : ""
-    );
-    const { data: created, error: createError } = await supabase
-      .from("profiles")
-      .upsert(initial)
-      .select("*")
-      .single();
-    if (createError) {
+      const metadata = currentSession.user.user_metadata;
+      const initial = defaultProfile(
+        currentSession.user.id,
+        typeof metadata.first_name === "string" ? metadata.first_name : "",
+        typeof metadata.surname === "string" ? metadata.surname : ""
+      );
+      const { data: created, error: createError } = await supabase
+        .from("profiles")
+        .upsert(initial)
+        .select("*")
+        .single();
+      if (generation !== authGeneration.current) return;
+      if (createError) {
+        setProfile(null);
+        setError(errorMessage(createError));
+      } else {
+        setProfile(created as Profile);
+      }
+    } catch (failure) {
+      if (generation !== authGeneration.current) return;
       setProfile(null);
-      setError(errorMessage(createError));
-    } else {
-      setProfile(created as Profile);
+      setError(failure instanceof Error ? failure.message : "Could not load your profile.");
+    } finally {
+      if (generation === authGeneration.current) setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -110,19 +124,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     let active = true;
     const applySession = (nextSession: Session | null) => {
-      if (active) void loadProfile(nextSession);
+      if (active) {
+        window.setTimeout(() => {
+          if (active) void loadProfile(nextSession);
+        }, 0);
+      }
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       applySession(nextSession);
-    });
-    void supabase.auth.getSession().then(({ data, error: sessionError }) => {
-      if (!active) return;
-      if (sessionError) {
-        setError(errorMessage(sessionError));
-        setLoading(false);
-        return;
-      }
-      applySession(data.session);
     });
     return () => {
       active = false;
@@ -143,7 +152,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name: firstName, surname } },
+      options: {
+        data: { first_name: firstName, surname },
+        emailRedirectTo: window.location.origin,
+      },
     });
     if (signUpError) return errorMessage(signUpError);
     return data.session ? null : "CHECK_EMAIL";

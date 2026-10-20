@@ -31,11 +31,10 @@ Vite · React 18 · TypeScript · Tailwind CSS 3 · Supabase (Auth, Postgres, Ed
 2. Run `supabase/migrations/20261020000000_init.sql` in the SQL editor.
 3. Deploy the function:
    ```bash
-   npm i -g supabase
-   supabase login
-   supabase link --project-ref YOUR_REF
-   supabase functions deploy study-buddy
+   npx supabase login
+   npx supabase functions deploy study-buddy --project-ref YOUR_PROJECT_REF
    ```
+   Replace `YOUR_PROJECT_REF` with the project reference from your Supabase URL (the part before `.supabase.co`). The chat function must be deployed to the same project as the frontend.
 4. Set the AI secrets (not needed on Lovable Cloud, which provides `LOVABLE_API_KEY`):
    ```bash
    supabase secrets set AI_API_KEY=sk-... \
@@ -43,7 +42,21 @@ Vite · React 18 · TypeScript · Tailwind CSS 3 · Supabase (Auth, Postgres, Ed
      AI_MODEL=gpt-4o-mini
    ```
    Any OpenAI-compatible streaming endpoint works.
+   Set these values as **Supabase Edge Function secrets**, not in the frontend `.env`. Keep provider API keys private.
 5. Authentication > URL configuration: add your site URL. For fast demos you may turn off "Confirm email".
+
+For local email confirmation, set **Site URL** to `http://localhost:5173` and add these to **Redirect URLs**:
+
+```text
+http://localhost:5173/**
+http://127.0.0.1:5173/**
+```
+
+The signup flow returns to the same origin that opened the signup page. Use the Vite URL (not Live Server on port 5501), and add your deployed domain to Redirect URLs before testing production signup. Confirmation links sent before changing these settings may still point to the old URL; request a fresh confirmation email after fixing the settings.
+
+Run `supabase/migrations/20261020000000_init.sql` once in the Supabase SQL Editor to create the profile/message tables, row-level security policies, and profile-on-signup trigger.
+
+If chat reports **“study-buddy function was not found”** or **“Failed to fetch”**, verify that `study-buddy` appears under **Supabase → Edge Functions**, then deploy it to the project referenced by your frontend URL. A successful frontend build does not deploy the Edge Function. If the function exists but reports that the AI service is not configured, add `AI_API_KEY` (and optionally `AI_GATEWAY_URL` and `AI_MODEL`) under **Supabase → Edge Functions → Secrets**, then redeploy/retry.
 
 ### 2. Frontend
 ```powershell
@@ -69,9 +82,9 @@ supabase/
   functions/study-buddy/  prompt builder + streaming AI proxy
 ```
 
-## 🧠 Prompt engineering notes
+## 🧠 Tutor response quality
 
-The system prompt (see `supabase/functions/study-buddy/index.ts`) enforces: analogy first, then an "analogy to Azure" mapping; real African examples (mobile money, minibus taxis, load-shedding, spaza shops); 120-220 words; one check-for-understanding question per reply; honesty about uncertainty and no invented prices or SLAs; own practice questions only; safe, age-appropriate output; prompt-length caps and history trimming on the server.
+The server-side tutor instructions in `supabase/functions/study-buddy/index.ts` prioritize technical accuracy over role-play. Answers follow the learner's selected language, explain official Azure terminology, use the selected teaching mode only for presentation, and provide detailed definitions, mechanisms, examples, and AZ-900 distinctions for substantive questions. The tutor must disclose uncertainty and avoid inventing current pricing, quotas, SLAs, citations, or product behavior. The Edge Function must be deployed separately from the frontend for chat to work.
 
 ## ⚠️ Honest limitations
 

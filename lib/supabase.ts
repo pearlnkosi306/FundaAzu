@@ -9,7 +9,14 @@ export const isConfigured = Boolean(supabaseUrl && supabaseKey);
 export const supabase = createClient(
   supabaseUrl || "http://127.0.0.1:54321",
   supabaseKey || "local-development-placeholder",
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "pkce",
+    },
+  }
 );
 
 export function configurationError(): string {

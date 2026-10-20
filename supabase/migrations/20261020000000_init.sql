@@ -27,6 +27,13 @@ create index if not exists chat_messages_user_created_at_idx
 alter table public.profiles enable row level security;
 alter table public.chat_messages enable row level security;
 
+drop policy if exists "Users can read their own profile" on public.profiles;
+drop policy if exists "Users can create their own profile" on public.profiles;
+drop policy if exists "Users can update their own profile" on public.profiles;
+drop policy if exists "Users can read their own messages" on public.chat_messages;
+drop policy if exists "Users can add their own messages" on public.chat_messages;
+drop policy if exists "Users can delete their own messages" on public.chat_messages;
+
 create policy "Users can read their own profile"
   on public.profiles for select to authenticated
   using (auth.uid() = id);
@@ -48,6 +55,9 @@ create policy "Users can delete their own messages"
   on public.chat_messages for delete to authenticated
   using (auth.uid() = user_id);
 
+grant select, insert, update on public.profiles to authenticated;
+grant select, insert, delete on public.chat_messages to authenticated;
+
 create or replace function public.create_profile_for_new_user()
 returns trigger
 language plpgsql
@@ -66,6 +76,7 @@ begin
 end;
 $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.create_profile_for_new_user();
