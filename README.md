@@ -46,10 +46,11 @@ Vite · React 18 · TypeScript · Tailwind CSS 3 · Supabase (Auth, Postgres, Ed
 5. Authentication > URL configuration: add your site URL. For fast demos you may turn off "Confirm email".
 
 ### 2. Frontend
-```bash
-cp .env.example .env     # add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
+```powershell
+Copy-Item .env.example .env
+# Edit .env and add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY
 npm install
-npm run dev              # http://localhost:8080
+npm run dev               # open http://localhost:5173; do not use VS Code Live Server
 ```
 
 ### 3. Deploy
@@ -58,12 +59,11 @@ Push to GitHub, then import into Lovable, Vercel, Netlify or Cloudflare Pages. B
 ## 🗂️ Structure
 
 ```
-src/
-  App.tsx                 screen switching (auth, preferences, chat)
-  pages/                  Auth, Preferences (mode/language/music/visuals/theme), Chat
-  components/             Backdrop (Africa watermark + themes), MessageBubble, Mermaid
-  hooks/                  useAuth, useAmbientMusic
-  lib/                    modes, languages, topics, streaming client, supabase client
+App.tsx                    screen switching (auth, preferences, chat)
+pages/                     Auth, Preferences, Chat
+components/                Africa watermark, message bubbles, Mermaid diagrams
+hooks/                     Supabase auth/profile and ambient music
+lib/                       modes, languages, topics, streaming client, Supabase client
 supabase/
   migrations/             tables, RLS, signup trigger
   functions/study-buddy/  prompt builder + streaming AI proxy

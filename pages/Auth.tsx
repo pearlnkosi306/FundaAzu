@@ -11,11 +11,21 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: FormEvent) => {
-    e.preventDefault(); setErr(null); setInfo(null); setBusy(true);
-    const r = mode === "signup" ? await signUp({ firstName: firstName.trim(), surname: surname.trim(), email, password }) : await signIn(email, password);
-    setBusy(false);
-    if (r === "CHECK_EMAIL") setInfo("Almost there! Check your email to confirm your account, then sign in.");
-    else if (r) setErr(r);
+    e.preventDefault();
+    setErr(null);
+    setInfo(null);
+    setBusy(true);
+    try {
+      const result = mode === "signup"
+        ? await signUp({ firstName: firstName.trim(), surname: surname.trim(), email, password })
+        : await signIn(email, password);
+      if (result === "CHECK_EMAIL") setInfo("Almost there! Check your email to confirm your account, then sign in.");
+      else if (result) setErr(result);
+    } catch (failure) {
+      setErr(failure instanceof Error ? failure.message : "Authentication failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

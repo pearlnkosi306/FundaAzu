@@ -25,14 +25,30 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
 
   useEffect(() => {
     if (!session) return;
-    supabase.from("chat_messages").select("role,content").eq("user_id", session.user.id)
-      .order("created_at", { ascending: true }).limit(60)
-      .then(({ data }) => setMessages((data as ChatMsg[]) ?? []));
+    let active = true;
+    void (async () => {
+      try {
+        const { data, error: loadError } = await supabase.from("chat_messages")
+          .select("role,content")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: true })
+          .limit(60);
+        if (!active) return;
+        if (loadError) setError(loadError.message);
+        else setMessages((data as ChatMsg[]) ?? []);
+      } catch (failure) {
+        if (active) setError(failure instanceof Error ? failure.message : "Could not load your conversation.");
+      }
+    })();
+    return () => { active = false; };
   }, [session]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  const persist = (role: "user" | "assistant", content: string) =>
-    session && supabase.from("chat_messages").insert({ user_id: session.user.id, role, content });
+  const persist = async (role: "user" | "assistant", content: string) => {
+    if (!session) throw new Error("Your sign-in has expired. Please sign in again.");
+    const { error: saveError } = await supabase.from("chat_messages").insert({ user_id: session.user.id, role, content });
+    if (saveError) throw new Error(saveError.message);
+  };
 
   const send = async (text: string) => {
     const content = text.trim();
@@ -40,16 +56,16 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
     setError(null); setInput(""); setBusy(true);
     const history: ChatMsg[] = [...messages, { role: "user", content }];
     setMessages([...history, { role: "assistant", content: "" }]);
-    persist("user", content);
     abortRef.current = new AbortController();
     try {
+      await persist("user", content);
       const full = await streamStudyBuddy(history, {
         firstName: p.first_name, languageName: languageName(p.language), modeLabel: mode.label,
         variantLabel: variant?.label, modeStyle: `${mode.style} ${variant?.style ?? ""}`.trim(), visuals: p.visuals,
       }, (t) => setMessages((m) => { const c = [...m]; c[c.length - 1] = { role: "assistant", content: c[c.length - 1].content + t }; return c; }), abortRef.current.signal);
-      if (full) persist("assistant", full);
+      if (full) await persist("assistant", full);
     } catch (e) {
-      if ((e as Error).name !== "AbortError") setError((e as Error).message);
+      if (!(e instanceof Error && e.name === "AbortError")) setError(e instanceof Error ? e.message : "Could not send your message.");
       setMessages((m) => (m[m.length - 1]?.content ? m : m.slice(0, -1)));
     } finally { setBusy(false); }
   };
@@ -57,8 +73,32 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
   const onSubmit = (e: FormEvent) => { e.preventDefault(); send(input); };
   const clear = async () => {
     if (!session || !confirm("Clear this conversation?")) return;
-    await supabase.from("chat_messages").delete().eq("user_id", session.user.id);
-    setMessages([]);
+    setError(null);
+    try {
+      const { error: deleteError } = await supabase.from("chat_messages").delete().eq("user_id", session.user.id);
+      if (deleteError) throw new Error(deleteError.message);
+      setMessages([]);
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Could not clear your conversation.");
+    }
+  };
+
+  const toggleMusic = async () => {
+    const nextPlaying = !music.playing;
+    music.toggle();
+    try {
+      await updateProfile({ music: nextPlaying });
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Could not save your music preference.");
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Could not sign out.");
+    }
   };
 
   const dictate = () => {
@@ -80,7 +120,7 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
           <h1 className="truncate text-xl font-bold leading-tight">Hi {p.first_name || "friend"} 👋</h1>
           <p className="truncate text-xs font-bold text-night/70">{mode.label}{variant ? ` · ${variant.label}` : ""} · {lang?.native}</p>
         </div>
-        <button className="btn btn-ghost !px-3" onClick={() => { if (!music.playing) updateProfile({ music: true }); music.toggle(); }} aria-pressed={music.playing} aria-label={music.playing ? "Pause music" : "Play focus music"}>
+        <button className="btn btn-ghost !px-3" onClick={toggleMusic} aria-pressed={music.playing} aria-label={music.playing ? "Pause music" : "Play focus music"}>
           <Headphones size={18} />{music.playing ? "On" : ""}
         </button>
         {music.playing && (
@@ -90,7 +130,7 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
         )}
         <button className="btn btn-ghost !px-3" onClick={onOpenPrefs} aria-label="Change mode, language and theme"><Settings size={18} /></button>
         <button className="btn btn-ghost !px-3" onClick={clear} aria-label="Clear conversation"><Trash2 size={18} /></button>
-        <button className="btn btn-ghost !px-3" onClick={signOut} aria-label="Sign out"><LogOut size={18} /></button>
+        <button className="btn btn-ghost !px-3" onClick={handleSignOut} aria-label="Sign out"><LogOut size={18} /></button>
       </header>
 
       <div className="kente rounded-full" aria-hidden />

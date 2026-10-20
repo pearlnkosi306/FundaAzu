@@ -1,0 +1,4 @@
+project_id = "fundaazu"
+
+[functions.study-buddy]
+verify_jwt = true
