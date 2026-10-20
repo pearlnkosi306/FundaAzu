@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --green:#0B6B3A; --gold:#F5B700; --clay:#D2452B; --night:#16132B; --cream:#FFF8E7; }
+
+html, body, #root { height: 100%; }
+body { font-family: 'Nunito', system-ui, sans-serif; color: var(--night); background: var(--cream); }
+h1, h2, h3, .font-display { font-family: 'Baloo 2', system-ui, sans-serif; }
+
+/* Africa watermark: fixed behind everything */
+.africa-watermark {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: currentColor;
+  -webkit-mask: url('/africa.svg') center / min(78vh, 90vw) no-repeat;
+          mask: url('/africa.svg') center / min(78vh, 90vw) no-repeat;
+  opacity: .12;
+}
+
+/* Kente-inspired accent stripe */
+.kente { height: 8px; background:
+  repeating-linear-gradient(90deg, var(--gold) 0 24px, var(--clay) 24px 48px, var(--green) 48px 72px, var(--night) 72px 80px); }
+
+.card { background: rgba(255,255,255,.86); backdrop-filter: blur(6px); border-radius: 1.25rem; box-shadow: 0 6px 24px rgba(22,19,43,.12); }
+.dark-theme .card { background: rgba(30,26,64,.78); color: #fff; }
+
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-extrabold transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-sun/60 disabled:opacity-50; }
+.btn-primary { @apply bg-savanna text-white hover:brightness-110; }
+.btn-gold { @apply bg-sun text-night hover:brightness-105; }
+.btn-ghost { @apply bg-white/70 text-night hover:bg-white; }
+.input { @apply w-full rounded-xl border-2 border-night/15 bg-white px-4 py-3 text-night placeholder:text-night/40 focus:border-savanna focus:outline-none focus-visible:ring-4 focus-visible:ring-savanna/20; }
+.chip { @apply rounded-2xl border-2 px-3 py-2 text-left transition focus:outline-none focus-visible:ring-4 focus-visible:ring-sun/60; }
+.chip-on { @apply border-savanna bg-savanna/10 shadow-md; }
+.chip-off { @apply border-night/10 bg-white/80 hover:border-sun; }
+
+@keyframes floaty { 0%{ transform: translateY(105vh) rotate(0deg); opacity:0 } 10%{opacity:.9} 90%{opacity:.9} 100%{ transform: translateY(-15vh) rotate(360deg); opacity:0 } }
+.floater { position: fixed; bottom: 0; z-index: 0; pointer-events: none; animation: floaty linear infinite; }
+
+@media (prefers-reduced-motion: reduce) { .floater { display: none; } * { scroll-behavior: auto !important; } }
+
+.prose-chat p { margin: .35rem 0; }
+.prose-chat ul, .prose-chat ol { margin: .35rem 0 .35rem 1.25rem; list-style: revert; }
+.prose-chat strong { font-weight: 800; }
+.prose-chat table { border-collapse: collapse; margin: .5rem 0; font-size: .9rem; }
+.prose-chat th, .prose-chat td { border: 1px solid rgba(22,19,43,.2); padding: .25rem .5rem; }
+.prose-chat code { background: rgba(22,19,43,.08); padding: 0 .25rem; border-radius: .25rem; }
