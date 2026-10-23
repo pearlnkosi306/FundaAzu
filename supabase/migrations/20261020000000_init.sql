@@ -2,7 +2,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   first_name text not null default '',
   surname text not null default '',
-  mode text not null default 'friend',
+  mode text not null default 'textbook',
   mode_variant text,
   language text not null default 'en',
   music boolean not null default false,
@@ -18,6 +18,7 @@ create table if not exists public.chat_messages (
   user_id uuid not null references auth.users (id) on delete cascade,
   role text not null check (role in ('user', 'assistant')),
   content text not null check (char_length(content) <= 20000),
+  style_label text,
   created_at timestamptz not null default now()
 );
 

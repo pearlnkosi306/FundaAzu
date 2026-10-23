@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { isConfigured } from "./lib/supabase";
 import Backdrop from "./components/AfricaWatermark";
-import Auth from "./pages/Auth";
-import Preferences from "./pages/Preferences";
-import Chat from "./pages/Chat";
+import { CursorMascot } from "./components/CloudMascot";
+import AccessibilityTools from "./components/AccessibilityTools";
+import { uiLanguageDirection, uiLanguageTag } from "./lib/uiTranslations";
+
+const Auth = lazy(() => import("./pages/Auth"));
+const Preferences = lazy(() => import("./pages/Preferences"));
+const Chat = lazy(() => import("./pages/Chat"));
 
 export default function App() {
   const { session, profile, loading, error, updateProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [previewTheme, setPreviewTheme] = useState<string | null>(null);
+  const [previewLanguage, setPreviewLanguage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const theme = previewTheme ?? profile?.theme ?? "savanna";
+  const language = previewLanguage ?? profile?.language ?? "en";
+  useEffect(() => {
+    document.documentElement.lang = uiLanguageTag(language);
+    document.documentElement.dir = uiLanguageDirection(language);
+  }, [language]);
 
   let body: React.ReactNode;
   if (!isConfigured) {
@@ -24,7 +34,7 @@ export default function App() {
       </main>
     );
   } else if (loading) {
-    body = <div className="relative z-10 grid h-full place-items-center text-xl font-bold">Loading your Study Buddy… 🌍</div>;
+    body = <div className="relative z-10 grid h-full place-items-center text-xl font-bold">Loading FundaAzu… 🌍</div>;
   } else if (error) {
     body = <main className="relative z-10 mx-auto max-w-lg p-8"><div className="card p-6">
       <h1 className="text-3xl font-bold">We couldn’t load your account</h1>
@@ -39,13 +49,16 @@ export default function App() {
       <Preferences
         initial={profile}
         onPreview={setPreviewTheme}
-        onCancel={profile.onboarded ? () => { setEditing(false); setPreviewTheme(null); } : undefined}
+        language={language}
+        onPreviewLanguage={setPreviewLanguage}
+        onCancel={profile.onboarded ? () => { setEditing(false); setPreviewTheme(null); setPreviewLanguage(null); } : undefined}
         onSave={async (p) => {
           setSaveError(null);
           try {
             await updateProfile({ ...p, onboarded: true });
             setEditing(false);
             setPreviewTheme(null);
+            setPreviewLanguage(null);
           } catch (saveFailure) {
             setSaveError(saveFailure instanceof Error ? saveFailure.message : "Could not save your preferences.");
           }
@@ -56,8 +69,10 @@ export default function App() {
     body = <Chat onOpenPrefs={() => setEditing(true)} />;
   }
 
-  return (<><Backdrop themeId={theme} /><div className="h-full overflow-y-auto">
+  const isChat = Boolean(session && profile?.onboarded && !editing);
+
+  return (<><Backdrop themeId={theme} />{session && profile?.onboarded && <CursorMascot />}<div className="h-full overflow-y-auto">
     {saveError && <p role="alert" className="relative z-20 mx-auto mt-3 max-w-lg rounded-lg bg-clay/10 p-3 text-center font-bold text-clay">{saveError}</p>}
-    {body}
-  </div></>);
+    <Suspense fallback={<div className="relative z-10 grid h-full place-items-center font-bold">Loading FundaAzu… 🌍</div>}>{body}</Suspense>
+  </div>{!isChat && <AccessibilityTools language={language} />}</>);
 }

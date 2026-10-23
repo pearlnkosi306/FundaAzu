@@ -1,4 +1,4 @@
-import { isValidElement } from "react";
+import { memo, isValidElement } from "react";
 import type { ComponentProps, ReactElement } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -7,10 +7,11 @@ import MermaidDiagram from "./MermaidDiagram";
 interface MessageBubbleProps {
   role: "user" | "assistant";
   content: string;
+  styleLabel?: string | null;
   streaming?: boolean;
 }
 
-export default function MessageBubble({ role, content, streaming = false }: MessageBubbleProps) {
+function MessageBubble({ role, content, styleLabel, streaming = false }: MessageBubbleProps) {
   const isUser = role === "user";
   const components = {
     code({ className, children, ...props }: ComponentProps<"code">) {
@@ -27,8 +28,9 @@ export default function MessageBubble({ role, content, streaming = false }: Mess
 
   return (
     <article className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[90%] rounded-2xl px-4 py-3 shadow-sm ${isUser ? "bg-savanna text-white" : "card"}`}>
-        <div className={`prose-chat break-words ${isUser ? "text-white" : ""}`}>
+      <div className={`max-w-[98%] rounded-2xl px-4 py-3 shadow-sm sm:px-5 sm:py-4 ${isUser ? "bg-savanna text-white" : "card w-full"}`}>
+        {!isUser && styleLabel && <p className="mb-2 text-left text-[10px] font-extrabold uppercase tracking-wide text-night/55">{styleLabel}</p>}
+        <div className={`prose-chat dashboard-message break-words ${isUser ? "text-white" : ""}`}>
           <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
             {content || (streaming ? " " : "")}
           </ReactMarkdown>
@@ -38,3 +40,5 @@ export default function MessageBubble({ role, content, streaming = false }: Mess
     </article>
   );
 }
+
+export default memo(MessageBubble);

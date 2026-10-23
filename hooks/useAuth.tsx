@@ -36,7 +36,7 @@ function defaultProfile(id: string, firstName = "", surname = ""): Profile {
     id,
     first_name: firstName,
     surname,
-    mode: "friend",
+    mode: "textbook",
     mode_variant: null,
     language: "en",
     music: false,

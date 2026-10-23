@@ -2,11 +2,13 @@ import { useState } from "react";
 import { LANGUAGES } from "../lib/languages";
 import { MODES, THEMES, getMode } from "../lib/modes";
 import type { Profile } from "../hooks/useAuth";
+import { uiText } from "../lib/uiTranslations";
 
 type Prefs = Pick<Profile, "mode" | "mode_variant" | "language" | "music" | "visuals" | "theme">;
 
-export default function Preferences({ initial, onSave, onCancel, onPreview }: {
+export default function Preferences({ initial, onSave, onCancel, onPreview, language, onPreviewLanguage }: {
   initial: Prefs; onSave: (p: Prefs) => void; onCancel?: () => void; onPreview?: (themeId: string) => void;
+  language: string; onPreviewLanguage: (languageId: string) => void;
 }) {
   const [p, setP] = useState<Prefs>(initial);
   const mode = getMode(p.mode);
@@ -23,11 +25,12 @@ export default function Preferences({ initial, onSave, onCancel, onPreview }: {
   return (
     <main className="relative z-10 mx-auto max-w-3xl space-y-4 px-4 py-8">
       <header className="text-center">
-        <h1 className="text-4xl font-bold">Set up your Study Buddy</h1>
-        <p className="font-semibold text-night/80">Pick how you want to learn. You can change this anytime.</p>
+        <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-savanna">FundaAzu · AZ-900 Study Buddy</p>
+        <h1 className="text-4xl font-bold">{uiText(language, "setupTitle")}</h1>
+        <p className="font-semibold text-night/80">{uiText(language, "setupHint")}</p>
       </header>
 
-      <Section n={1} title="How should I teach you?">
+      <Section n={1} title={uiText(language, "modeTitle")}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
           {MODES.map((m) => (
             <button key={m.id} className={chip(p.mode === m.id)} aria-pressed={p.mode === m.id}
@@ -51,35 +54,35 @@ export default function Preferences({ initial, onSave, onCancel, onPreview }: {
         )}
       </Section>
 
-      <Section n={2} title="Which language?">
+      <Section n={2} title={uiText(language, "languageTitle")}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {LANGUAGES.map((l) => (
-            <button key={l.id} className={chip(p.language === l.id)} aria-pressed={p.language === l.id} onClick={() => set({ language: l.id })}>
+            <button key={l.id} className={chip(p.language === l.id)} aria-pressed={p.language === l.id} onClick={() => { set({ language: l.id }); onPreviewLanguage(l.id); }}>
               <div className="font-extrabold">{l.native}</div>
               <div className="text-xs text-night/70">{l.name} · {l.region}</div>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-night/70">Azure service names stay in English so they match the exam, with explanations in your language.</p>
+        <p className="mt-2 text-xs text-night/70">{uiText(language, "languageHint")}</p>
       </Section>
 
-      <Section n={3} title="Focus music & visuals">
+      <Section n={3} title={uiText(language, "focusTitle")}>
         <div className="grid gap-3 sm:grid-cols-2">
           <button className={chip(p.music)} aria-pressed={p.music} onClick={() => set({ music: !p.music })}>
             <div className="text-2xl" aria-hidden>🎧</div>
-            <div className="font-extrabold">Calm instrumental music: {p.music ? "ON" : "OFF"}</div>
-            <div className="text-xs text-night/70">Soft, vocal-free focus music generated live in your browser.</div>
+            <div className="font-extrabold">{uiText(language, "musicTitle")}: {p.music ? "ON" : "OFF"}</div>
+            <div className="text-xs text-night/70">A flowing 120 BPM piano arpeggio with soft violin and cello harmony, repeating every 15 minutes.</div>
           </button>
           <button className={chip(p.visuals)} aria-pressed={p.visuals} onClick={() => set({ visuals: !p.visuals })}>
             <div className="text-2xl" aria-hidden>📊</div>
-            <div className="font-extrabold">Diagrams & visuals: {p.visuals ? "ON" : "OFF"}</div>
+            <div className="font-extrabold">{uiText(language, "visualsTitle")}: {p.visuals ? "ON" : "OFF"}</div>
             <div className="text-xs text-night/70">Little diagrams that show how Azure pieces fit together.</div>
           </button>
         </div>
       </Section>
 
-      <Section n={4} title="Pick your background">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      <Section n={4} title={uiText(language, "themeTitle")}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {THEMES.map((t) => (
             <button key={t.id} className={chip(p.theme === t.id)} aria-pressed={p.theme === t.id}
               onClick={() => { set({ theme: t.id }); onPreview?.(t.id); }}>
@@ -91,8 +94,8 @@ export default function Preferences({ initial, onSave, onCancel, onPreview }: {
       </Section>
 
       <div className="flex justify-center gap-3 pb-8">
-        {onCancel && <button className="btn btn-ghost" onClick={onCancel}>Cancel</button>}
-        <button className="btn btn-primary text-lg" onClick={() => onSave(p)}>Let's go! 🚀</button>
+        {onCancel && <button className="btn btn-ghost" onClick={onCancel}>{uiText(language, "cancel")}</button>}
+        <button className="btn btn-primary text-lg" onClick={() => onSave(p)}>{uiText(language, "save")}</button>
       </div>
     </main>
   );

@@ -1,14 +1,15 @@
 import { configurationError, isConfigured, supabase } from "./supabase";
 
-export type ChatMsg = { role: "user" | "assistant"; content: string };
+export type ChatMsg = { role: "user" | "assistant"; content: string; styleLabel?: string | null };
 
 export interface StudyBuddyOptions {
   firstName: string;
   languageName: string;
   modeLabel: string;
   variantLabel?: string;
-  modeStyle: string;
   visuals: boolean;
+  visualTheme: string;
+  sceneGuidance?: string;
 }
 
 interface StreamChunk {
@@ -62,7 +63,7 @@ export async function streamStudyBuddy(
       "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY,
       "Accept": "text/event-stream",
     },
-    body: JSON.stringify({ messages, preferences }),
+    body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })), preferences }),
     });
   } catch (failure) {
     if (failure instanceof Error && failure.name === "AbortError") throw failure;

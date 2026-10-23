@@ -17,17 +17,18 @@ const variants = (items: [string, string, string][]): ModeVariant[] =>
   items.map(([id, label, style]) => ({ id, label, style }));
 
 export const MODES: TeachingMode[] = [
-  { id: "friend", label: "Friend", emoji: "🤝", blurb: "Friendly and relaxed", style: "Explain like a supportive friend: warm, clear, and conversational." },
-  { id: "anime", label: "Anime", emoji: "⚡", blurb: "Big ideas, big energy", style: "Teach with exciting character arcs, challenges, and memorable anime-style moments.", variants: variants([["naruto", "Naruto", "Use teamwork, perseverance, and Naruto-world analogies."], ["dragon-ball", "Dragon Ball Z", "Use training, power levels, and Dragon Ball-style analogies."], ["one-piece", "One Piece", "Use crews, voyages, and One Piece-style analogies."]]) },
-  { id: "film", label: "Film", emoji: "🎬", blurb: "Make it a movie", style: "Explain with scenes, casts, and story structure.", variants: variants([["action", "Action", "Use an action-adventure movie feel."], ["comedy", "Comedy", "Use light, family-friendly comedy."], ["scifi", "Sci-fi", "Use imaginative science-fiction scenarios."]]) },
-  { id: "gossip", label: "Gossip", emoji: "🗣️", blurb: "The interesting story", style: "Use playful, respectful storytelling and a little harmless gossip-style suspense." },
-  { id: "house", label: "House & rent", emoji: "🏠", blurb: "Everyday home examples", style: "Use renting, household, and neighborhood examples." },
-  { id: "cars", label: "Cars", emoji: "🚗", blurb: "Under the bonnet", style: "Use vehicles, roads, mechanics, and journeys as analogies.", variants: variants([["racing", "Racing", "Use racing and pit-stop analogies."], ["road-trip", "Road trip", "Use road-trip and navigation analogies."], ["workshop", "Workshop", "Use garage and engine analogies."]]) },
-  { id: "football", label: "Football", emoji: "⚽", blurb: "A team game", style: "Use football teams, tactics, training, and match-day examples.", variants: variants([["club", "Club football", "Use club and league football analogies."], ["national", "National teams", "Use international tournament analogies."], ["street", "Street football", "Use informal neighborhood football analogies."]]) },
-  { id: "music", label: "Music", emoji: "🎵", blurb: "Find the rhythm", style: "Use rhythm, instruments, rehearsal, and music production analogies.", variants: variants([["afrobeats", "Afrobeats", "Use Afrobeats-inspired musical analogies."], ["choir", "Choir", "Use choir and ensemble analogies."], ["dj", "DJ", "Use mixing and sound-system analogies."]]) },
-  { id: "kitchen", label: "Kitchen", emoji: "🍲", blurb: "Recipes and ingredients", style: "Use cooking, recipes, ingredients, and kitchen teamwork." },
-  { id: "gaming", label: "Gaming", emoji: "🎮", blurb: "Level up your knowledge", style: "Use quests, game mechanics, and cooperative play.", variants: variants([["adventure", "Adventure", "Use exploration and quest analogies."], ["sports", "Sports games", "Use teams, stats, and tournament analogies."], ["puzzle", "Puzzle games", "Use clues, levels, and puzzle-solving analogies."]]) },
-  { id: "classic", label: "Classic teacher", emoji: "📚", blurb: "Step-by-step lessons", style: "Teach clearly and patiently, define terms, and use a structured lesson." },
+  { id: "textbook", label: "Textbook", emoji: "📖", blurb: "Clear, structured explanations", style: "Define the Azure concept, explain how it works in an organized sequence, and give a precise practical example." },
+  { id: "friend", label: "Friend", emoji: "🤝", blurb: "Friendly and relaxed", style: "Explain through a relatable everyday situation as a supportive friend, using relaxed, natural language." },
+  { id: "anime", label: "Anime", emoji: "⚡", blurb: "Big ideas, big energy", style: "Teach through an energetic, original adventure scenario with a challenge, a team, and a clear payoff.", variants: variants([["naruto", "Ninja adventure", "Use original teamwork and perseverance analogies."], ["dragon-ball", "Martial arts adventure", "Use original training and challenge analogies."], ["one-piece", "Pirate adventure", "Use original crew, voyage, and exploration analogies."]]) },
+  { id: "film", label: "Film", emoji: "🎬", blurb: "Make it a movie", style: "Frame the explanation as an original movie scene with a setup, turning point, and outcome.", variants: variants([["action", "Action", "Use an action-adventure movie feel."], ["comedy", "Comedy", "Use light, family-friendly comedy."], ["scifi", "Sci-fi", "Use imaginative science-fiction scenarios."]]) },
+  { id: "gossip", label: "Gossip", emoji: "🗣️", blurb: "The interesting story", style: "Open with a playful fictional neighborhood-gossip scenario, build harmless suspense, then reveal the concept respectfully." },
+  { id: "house", label: "House & rent", emoji: "🏠", blurb: "Everyday home examples", style: "Explain through a concrete household, landlord, tenant, or neighborhood situation." },
+  { id: "cars", label: "Cars", emoji: "🚗", blurb: "Under the bonnet", style: "Explain through a concrete car, road, journey, or workshop analogy and map its parts to Azure.", variants: variants([["racing", "Racing", "Use racing and pit-stop analogies."], ["road-trip", "Road trip", "Use road-trip and navigation analogies."], ["workshop", "Workshop", "Use garage and engine analogies."]]) },
+  { id: "football", label: "Football", emoji: "⚽", blurb: "A team game", style: "Explain through a match, team, training, or tactics scenario, mapping roles and events to Azure.", variants: variants([["club", "Club football", "Use club and league football analogies."], ["national", "National teams", "Use international tournament analogies."], ["street", "Street football", "Use informal neighborhood football analogies."]]) },
+  { id: "music", label: "Music", emoji: "🎵", blurb: "Find the rhythm", style: "Explain through a rehearsal, rhythm, instrument, or music-production scenario.", variants: variants([["afrobeats", "Afrobeats", "Use Afrobeats-inspired musical analogies."], ["choir", "Choir", "Use choir and ensemble analogies."], ["dj", "DJ", "Use mixing and sound-system analogies."]]) },
+  { id: "kitchen", label: "Kitchen", emoji: "🍲", blurb: "Recipes and ingredients", style: "Explain through a recipe, ingredients, kitchen roles, or meal-preparation scenario." },
+  { id: "gaming", label: "Gaming", emoji: "🎮", blurb: "Level up your knowledge", style: "Explain through an original quest, level, co-op challenge, or game mechanic.", variants: variants([["adventure", "Adventure", "Use exploration and quest analogies."], ["sports", "Sports games", "Use teams, stats, and tournament analogies."], ["puzzle", "Puzzle games", "Use clues, levels, and puzzle-solving analogies."]]) },
+  { id: "classic", label: "Classic teacher", emoji: "📚", blurb: "Step-by-step lessons", style: "Teach patiently in a clear sequence with a simple worked example and a check for understanding." },
 ];
 
 export interface Theme {
@@ -44,6 +45,8 @@ export const THEMES: Theme[] = [
   { id: "ocean", label: "Indian Ocean", emoji: "🌊", bg: "linear-gradient(145deg, #e7f9ff, #c5e7f0)", accent: "#147a91" },
   { id: "night", label: "Starry night", emoji: "🌙", bg: "linear-gradient(145deg, #e5e2f5, #c5c4e4)", accent: "#36305f" },
   { id: "rainforest", label: "Rainforest", emoji: "🌳", bg: "linear-gradient(145deg, #e8f6e8, #b9dfc0)", accent: "#24613b" },
+  { id: "sunset", label: "Sunset", emoji: "🌅", bg: "linear-gradient(145deg, #fff0dc, #ffc3a0)", accent: "#b9472e" },
+  { id: "lavender", label: "Lavender", emoji: "💜", bg: "linear-gradient(145deg, #f5edff, #d8c5f2)", accent: "#68439a" },
 ];
 
 export function getMode(id: string): TeachingMode {

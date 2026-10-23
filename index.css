@@ -6,7 +6,7 @@
 
 html, body, #root { height: 100%; }
 body { font-family: 'Nunito', system-ui, sans-serif; color: var(--night); background: var(--cream); }
-h1, h2, h3, .font-display { font-family: 'Baloo 2', system-ui, sans-serif; }
+h1, h2, h3, .font-display { font-family: 'Fredoka', 'Nunito', system-ui, sans-serif; }
 
 /* Africa watermark: fixed behind everything */
 .africa-watermark {
@@ -33,10 +33,94 @@ h1, h2, h3, .font-display { font-family: 'Baloo 2', system-ui, sans-serif; }
 .chip-on { @apply border-savanna bg-savanna/10 shadow-md; }
 .chip-off { @apply border-night/10 bg-white/80 hover:border-sun; }
 
+@keyframes globe-bounce {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  45% { transform: translateY(-14px) rotate(5deg); }
+  65% { transform: translateY(-7px) rotate(1deg); }
+}
+@keyframes auth-enter {
+  from { opacity: 0; transform: translateY(18px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes title-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-2deg); }
+  75% { transform: rotate(2deg); }
+}
+.auth-page { isolation: isolate; }
+.auth-intro, .auth-card { animation: auth-enter .65s cubic-bezier(.2,.8,.2,1) both; }
+.auth-card { animation-delay: .12s; }
+.auth-globe {
+  background: linear-gradient(145deg, rgba(245,183,0,.28), rgba(210,69,43,.12));
+  animation: globe-bounce 2.4s ease-in-out infinite;
+}
+.brand-wavy { text-shadow: 0 3px 0 rgba(245,183,0,.35); }
+.auth-tab { transition: background-color .2s ease, transform .2s ease; }
+.auth-tab:hover { transform: translateY(-1px); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(11,107,58,.22); }
+.welcome-mascot { border: 2px solid rgba(11,107,58,.12); }
+.dashboard-page h1,
+.dashboard-page h2,
+.dashboard-page .font-display { font-family: 'Fredoka', 'Nunito', system-ui, sans-serif; }
+.dashboard-message { font-size: 1.1rem; line-height: 1.75; }
+.dashboard-message h1,
+.dashboard-message h2,
+.dashboard-message h3 { margin: .75rem 0 .35rem; font-family: 'Fredoka', 'Nunito', system-ui, sans-serif; line-height: 1.2; }
+.dashboard-message h1 { font-size: 1.5rem; }
+.dashboard-message h2 { font-size: 1.3rem; }
+.dashboard-message h3 { font-size: 1.12rem; }
+.dashboard-message p { margin: .55rem 0; }
+.accessibility-panel { max-height: min(80vh, 38rem); overflow-y: auto; }
+.accessibility-trigger { border: 3px solid white; }
+html.a11y-readable-font body,
+html.a11y-readable-font button,
+html.a11y-readable-font input,
+html.a11y-readable-font textarea,
+html.a11y-readable-font select {
+  font-family: 'Atkinson Hyperlegible', 'Nunito', system-ui, sans-serif !important;
+  letter-spacing: .015em;
+}
+html.a11y-text-large { font-size: 112.5%; }
+html.a11y-text-larger { font-size: 125%; }
+html.a11y-high-contrast body { color: #080808; }
+html.a11y-high-contrast .card {
+  border: 2px solid #111;
+  background: #fff !important;
+  color: #080808 !important;
+}
+html.a11y-high-contrast [class~="text-night/70"],
+html.a11y-high-contrast [class~="text-night/80"] { color: #222 !important; }
+html.a11y-high-contrast .input { border-color: #111; }
+html.a11y-eye-comfort body { background: #f3eddf; color: #352f27; }
+html.a11y-eye-comfort .fixed.inset-0.z-0 { background: #f3eddf !important; }
+html.a11y-eye-comfort .africa-watermark { opacity: .045; }
+html.a11y-eye-comfort .card { background: rgba(255,250,238,.94); color: #352f27; }
+html.a11y-eye-comfort .input { background: #fffaf0; color: #352f27; }
+.cursor-mascot {
+  position: fixed;
+  z-index: 30;
+  width: 64px;
+  height: 84px;
+  pointer-events: none;
+  opacity: 0;
+  transition: left .2s ease-out, top .2s ease-out, opacity .25s ease-out;
+  filter: drop-shadow(0 3px 2px rgba(22,19,43,.12));
+}
+.cursor-mascot-following { opacity: 1; }
+
 @keyframes floaty { 0%{ transform: translateY(105vh) rotate(0deg); opacity:0 } 10%{opacity:.9} 90%{opacity:.9} 100%{ transform: translateY(-15vh) rotate(360deg); opacity:0 } }
 .floater { position: fixed; bottom: 0; z-index: 0; pointer-events: none; animation: floaty linear infinite; }
 
-@media (prefers-reduced-motion: reduce) { .floater { display: none; } * { scroll-behavior: auto !important; } }
+@media (prefers-reduced-motion: reduce) {
+  .floater { display: none; }
+  .auth-intro, .auth-card, .auth-globe { animation: none !important; }
+  .cursor-mascot { display: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+@media (hover: none) {
+  .cursor-mascot { display: none; }
+}
 
 .prose-chat p { margin: .35rem 0; }
 .prose-chat ul, .prose-chat ol { margin: .35rem 0 .35rem 1.25rem; list-style: revert; }

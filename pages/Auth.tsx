@@ -29,17 +29,19 @@ export default function Auth() {
   };
 
   return (
-    <main className="relative z-10 mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-10">
-      <div className="mb-6 text-center">
-        <div className="text-6xl" aria-hidden>🌍</div>
-        <h1 className="mt-2 text-4xl font-bold text-night">AZ-900 Study Buddy</h1>
-        <p className="mt-1 font-semibold text-night/80">Learn Azure in <u>your</u> language, <u>your</u> vibe.</p>
+    <main className="auth-page relative z-10 mx-auto flex min-h-full max-w-md flex-col justify-center px-4 py-10">
+      <div className="auth-intro mb-6 text-center">
+        <div className="auth-globe mx-auto grid h-24 w-24 place-items-center rounded-[2rem] text-6xl" aria-hidden>🌍</div>
+        <p className="mt-3 text-xs font-extrabold uppercase tracking-[0.3em] text-savanna">Your next big thing starts here</p>
+        <h1 className="brand-wavy mt-1 text-5xl font-extrabold tracking-tight text-night">FundaAzu</h1>
+        <p className="mt-1 text-lg font-extrabold text-clay">AZ-900 Study Buddy</p>
+        <p className="mt-2 font-semibold text-night/80">Learn Azure in your language, your vibe.</p>
       </div>
-      <form onSubmit={submit} className="card space-y-3 p-6">
+      <form onSubmit={submit} className="auth-card card space-y-3 p-6">
         <div className="flex gap-2 rounded-full bg-night/5 p-1" role="tablist">
           {(["signup", "signin"] as const).map((m) => (
             <button type="button" key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-              className={`flex-1 rounded-full py-2 font-extrabold ${mode === m ? "bg-sun" : ""}`}>{m === "signup" ? "Create account" : "Sign in"}</button>
+              className={`auth-tab flex-1 rounded-full py-2 font-extrabold ${mode === m ? "bg-sun" : ""}`}>{m === "signup" ? "Create account" : "Sign in"}</button>
           ))}
         </div>
         {mode === "signup" && (
