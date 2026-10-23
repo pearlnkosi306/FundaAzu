@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { logError } from "../lib/userErrors";
 
 const BEAT_SECONDS = 0.5;
 const BEATS_PER_CYCLE = (15 * 60) / BEAT_SECONDS;
@@ -168,7 +169,7 @@ export function useAmbientMusic() {
     } catch (failure) {
       if (context && context.state !== "closed") await context.close();
       sessionRef.current = null;
-      setError(failure instanceof Error ? failure.message : "Could not start focus music.");
+      setError(logError("music.start", failure));
       setPlaying(false);
     }
   }, []);

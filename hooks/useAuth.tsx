@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { configurationError, isConfigured, supabase } from "../lib/supabase";
+import { logError } from "../lib/userErrors";
 
 export interface Profile {
   id: string;
@@ -46,11 +47,8 @@ function defaultProfile(id: string, firstName = "", surname = ""): Profile {
   };
 }
 
-function errorMessage(error: { message: string; code?: string }): string {
-  if (error.code === "PGRST205" || error.code === "42P01") {
-    return "Supabase is connected, but the profiles table is missing. Run supabase/migrations/20261020000000_init.sql in your Supabase SQL Editor, then retry.";
-  }
-  return error.message || "Something went wrong. Please try again.";
+function errorMessage(error: unknown): string {
+  return logError("auth.supabase", error);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -111,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (failure) {
       if (generation !== authGeneration.current) return;
       setProfile(null);
-      setError(failure instanceof Error ? failure.message : "Could not load your profile.");
+      setError(logError("auth.loadProfile", failure));
     } finally {
       if (generation === authGeneration.current) setLoading(false);
     }
@@ -167,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (updates: ProfileUpdate) => {
-    if (!session) throw new Error("You must be signed in to update your profile.");
+    if (!session) throw new Error(logError("profile.update", new Error("Missing active session.")));
     const { data, error: updateError } = await supabase
       .from("profiles")
       .update(updates)

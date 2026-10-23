@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { logError } from "../lib/userErrors";
 
 export default function Auth() {
   const { signIn, signUp } = useAuth();
@@ -22,7 +23,7 @@ export default function Auth() {
       if (result === "CHECK_EMAIL") setInfo("Almost there! Check your email to confirm your account, then sign in.");
       else if (result) setErr(result);
     } catch (failure) {
-      setErr(failure instanceof Error ? failure.message : "Authentication failed. Please try again.");
+      setErr(logError("auth.submit", failure));
     } finally {
       setBusy(false);
     }

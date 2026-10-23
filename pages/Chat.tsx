@@ -12,6 +12,7 @@ import MessageBubble from "../components/MessageBubble";
 import { WelcomeMascot } from "../components/CloudMascot";
 import AccessibilityTools from "../components/AccessibilityTools";
 import { uiLanguageTag, uiText } from "../lib/uiTranslations";
+import { USER_FACING_ERROR, logError } from "../lib/userErrors";
 
 export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
   const { profile, session, signOut, updateProfile } = useAuth();
@@ -29,6 +30,8 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
   const [browseOpen, setBrowseOpen] = useState(false);
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [deletingHistory, setDeletingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const questionInputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -51,18 +54,24 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
           .order("created_at", { ascending: false })
           .limit(60);
         if (!active) return;
-        if (loadError) setError(loadError.message);
+        if (loadError) setError(logError("chat.load", loadError));
         else setMessages(((data as Array<ChatMsg & { style_label: string | null }> | null) ?? []).reverse().map(({ role, content, style_label }) => ({
           role,
           content,
           styleLabel: style_label,
         })));
       } catch (failure) {
-        if (active) setError(failure instanceof Error ? failure.message : "Could not load your conversation.");
+        if (active) setError(logError("chat.load", failure));
       }
     })();
     return () => { active = false; };
   }, [session]);
+  useEffect(() => {
+    setReplyModeId(p.mode);
+    setReplyVariantId(p.mode_variant ?? "");
+    setReplyLanguage(p.language);
+    setReplyVisuals(p.visuals);
+  }, [p.mode, p.mode_variant, p.language, p.visuals]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => () => {
     abortRef.current?.abort();
@@ -141,7 +150,7 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
       if (full) await persist("assistant", full, styleLabel);
     } catch (e) {
       flushStreamedTokens();
-      if (!(e instanceof Error && e.name === "AbortError")) setError(e instanceof Error ? e.message : "Could not send your message.");
+      if (!(e instanceof Error && e.name === "AbortError")) setError(logError("chat.send", e));
       setMessages((m) => (m[m.length - 1]?.content ? m : m.slice(0, -1)));
     } finally {
       flushStreamedTokens();
@@ -150,15 +159,24 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
   };
 
   const onSubmit = (e: FormEvent) => { e.preventDefault(); send(input); };
-  const clear = async () => {
-    if (!session || !confirm("Clear this conversation?")) return;
+  const requestClear = () => {
+    if (!session || !confirm("Are you sure you want to clear this conversation?")) return;
+    setDeleteConfirmationOpen(true);
+  };
+
+  const confirmClear = async () => {
+    if (!session || deletingHistory) return;
+    setDeleteConfirmationOpen(false);
+    setDeletingHistory(true);
     setError(null);
     try {
       const { error: deleteError } = await supabase.from("chat_messages").delete().eq("user_id", session.user.id);
       if (deleteError) throw new Error(deleteError.message);
       setMessages([]);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Could not clear your conversation.");
+      setError(logError("chat.clear", failure));
+    } finally {
+      setDeletingHistory(false);
     }
   };
 
@@ -168,7 +186,7 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
     try {
       await updateProfile({ music: nextPlaying });
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Could not save your music preference.");
+      setError(logError("chat.musicPreference", failure));
     }
   };
 
@@ -176,16 +194,16 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
     try {
       await signOut();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Could not sign out.");
+      setError(logError("auth.signOut", failure));
     }
   };
 
   const dictate = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { setError("Voice input isn't supported in this browser."); return; }
+    if (!SR) { setError("We're working on it. Voice input isn't available in this browser—please type your question instead."); return; }
     const r = new SR(); r.lang = uiLanguageTag(replyLanguage);
     r.onresult = (ev: any) => setInput(ev.results[0][0].transcript);
-    r.onerror = () => setError("Couldn't hear you. Try again or type your question.");
+    r.onerror = () => setError("We're working on it. Voice input didn't work this time—please try again or type your question.");
     r.start();
   };
 
@@ -206,13 +224,13 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
           </label>
         )}
         <button className="btn btn-ghost !px-2 !py-2" onClick={onOpenPrefs} aria-label={uiText(p.language, "settings")}><Settings size={16} /></button>
-        <button className="btn btn-ghost !px-2 !py-2" onClick={clear} aria-label={uiText(p.language, "clear")}><Trash2 size={16} /></button>
+        <button className="btn btn-ghost !px-2 !py-2" onClick={requestClear} aria-label={uiText(p.language, "clear")}><Trash2 size={16} /></button>
         <button className="btn btn-ghost !px-2 !py-2" onClick={handleSignOut} aria-label={uiText(p.language, "signOut")}><LogOut size={16} /></button>
       </header>
 
       <div className="kente rounded-full" aria-hidden />
       <WelcomeMascot name={p.first_name || "friend"} />
-      {music.error && <p role="alert" className="mt-2 rounded-lg bg-clay/10 p-2 text-sm font-bold text-clay">{music.error}</p>}
+      {music.error && <p role="alert" className="mt-2 rounded-lg bg-clay/10 p-2 text-sm font-bold text-clay">{USER_FACING_ERROR}</p>}
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto py-2 sm:py-3" aria-live="polite">
         {messages.length === 0 && (
@@ -322,6 +340,30 @@ export default function Chat({ onOpenPrefs }: { onOpenPrefs: () => void }) {
         <button className="btn btn-primary !px-4" disabled={busy || !input.trim()} aria-label={uiText(replyLanguage, "send")}><SendHorizonal size={18} /></button>
       </form>
       <p className="shrink-0 pb-1 text-center text-[10px] text-night/70">Unofficial study aid, not affiliated with Microsoft. Always double-check with Microsoft Learn.</p>
+      {deleteConfirmationOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-night/60 p-4">
+          <section
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-history-title"
+            aria-describedby="delete-history-description"
+            className="card w-full max-w-md space-y-4 p-6 shadow-2xl"
+          >
+            <h2 id="delete-history-title" className="text-xl font-extrabold">Delete chat history?</h2>
+            <p id="delete-history-description" className="text-sm leading-relaxed">
+              Chat history will be deleted permanently. Are you sure?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button type="button" className="btn btn-ghost" onClick={() => setDeleteConfirmationOpen(false)}>
+                No
+              </button>
+              <button type="button" className="btn btn-primary" disabled={deletingHistory} onClick={() => void confirmClear()}>
+                Yes, delete
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

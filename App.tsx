@@ -5,6 +5,7 @@ import Backdrop from "./components/AfricaWatermark";
 import { CursorMascot } from "./components/CloudMascot";
 import AccessibilityTools from "./components/AccessibilityTools";
 import { uiLanguageDirection, uiLanguageTag } from "./lib/uiTranslations";
+import { logError } from "./lib/userErrors";
 
 const Auth = lazy(() => import("./pages/Auth"));
 const Preferences = lazy(() => import("./pages/Preferences"));
@@ -60,7 +61,7 @@ export default function App() {
             setPreviewTheme(null);
             setPreviewLanguage(null);
           } catch (saveFailure) {
-            setSaveError(saveFailure instanceof Error ? saveFailure.message : "Could not save your preferences.");
+            setSaveError(logError("profile.savePreferences", saveFailure));
           }
         }}
       />
